@@ -46,7 +46,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Valor Total (R$)</label>
-                            <input type="text" id="valor" placeholder="Opcional se souber a parcela">
+                            <input type="text" id="valor" placeholder="Opcional">
                         </div>
                         <div class="form-group">
                             <label>Valor da Parcela (R$)</label>
@@ -64,9 +64,17 @@
                             <input type="month" id="data-inicio" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Mês Final (Calculado Automático)</label>
-                        <input type="month" id="data-final" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mês Final (Automático)</label>
+                            <input type="month" id="data-final" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
+                        </div>
+                        <!-- Seletor de Cor do Gasto -->
+                        <div class="form-group">
+                            <label>Cor no Gráfico</label>
+                            <input type="color" id="cor-gasto" value="#2563eb" style="height: 42px; padding: 4px; cursor: pointer;">
+                        </div>
                     </div>
                     
                     <button id="add-btn" class="btn-success">Registrar Gasto</button>
@@ -193,6 +201,7 @@
             const parcelas = parseInt(document.getElementById('parcelas').value);
             const dataInicio = document.getElementById('data-inicio').value;
             const valorParcela = converterParaNumero(inputParcela.value);
+            const corGasto = document.getElementById('cor-gasto').value; // Captura a cor escolhida
 
             if(!desc || valorParcela <= 0 || !dataInicio || parcelas < 1) {
                 return alert('Preencha os campos de descrição, valor e data corretamente!');
@@ -222,7 +231,8 @@
                     desc: desc + sufixoParcela,
                     valor: valorParcela,
                     mesAno: mesAno,
-                    nomeOriginal: desc
+                    nomeOriginal: desc,
+                    cor: corGasto // Salva a cor escolhida no objeto
                 });
             }
             
@@ -254,12 +264,15 @@
             let maiorGasto = 0;
             const labelsGrafico = [];
             const dadosGrafico = [];
+            const coresGrafico = []; // Array para guardar as cores personalizadas do gráfico
 
             despesasFiltradas.forEach((d) => {
                 const li = document.createElement('li');
                 
                 li.innerHTML = `
-                    <div class="item-info">
+                    <div class="item-info" style="display: flex; align-items: center; gap: 10px;">
+                        <!-- Bolinha indicadora da cor escolhida -->
+                        <span style="width: 12px; height: 12px; background-color: ${d.cor || '#2563eb'}; border-radius: 50%; display: inline-block;"></span>
                         <span class="item-desc">${d.desc}</span>
                     </div>
                     <div class="item-actions">
@@ -283,6 +296,7 @@
                 if(index === -1) {
                     labelsGrafico.push(d.nomeOriginal);
                     dadosGrafico.push(d.valor);
+                    coresGrafico.push(d.cor || '#2563eb'); // Adiciona a cor escolhida
                 } else {
                     dadosGrafico[index] += d.valor;
                 }
@@ -296,10 +310,10 @@
                 lista.innerHTML = '<li style="justify-content:center; color:#94a3b8; border:none;">Nenhum gasto para este mês.</li>';
             }
 
-            atualizarGrafico(labelsGrafico, dadosGrafico);
+            atualizarGrafico(labelsGrafico, dadosGrafico, coresGrafico);
         }
 
-        function atualizarGrafico(labels, data) {
+        function atualizarGrafico(labels, data, cores) {
             const ctx = document.getElementById('graficoPizza').getContext('2d');
             if(meuGrafico) meuGrafico.destroy(); 
 
@@ -311,9 +325,7 @@
                     labels: labels,
                     datasets: [{
                         data: data,
-                        backgroundColor: [
-                            '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'
-                        ],
+                        backgroundColor: cores, // Aplica as cores exatas escolhidas pelo utilizador
                         borderWidth: 0
                     }]
                 },
