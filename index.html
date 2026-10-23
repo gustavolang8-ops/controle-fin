@@ -61,6 +61,12 @@
                             <input type="month" id="data-inicio" required>
                         </div>
                     </div>
+                    <!-- Novo campo de Mês Final Automático -->
+                    <div class="form-group">
+                        <label>Mês Final (Calculado Automático)</label>
+                        <input type="month" id="data-final" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
+                    </div>
+                    
                     <button id="add-btn" class="btn-success">Registrar Gasto</button>
                 </div>
 
@@ -99,11 +105,48 @@
         let meuGrafico = null;
         let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
 
+        // Função para calcular automaticamente o Mês Final
+        function atualizarMesFinal() {
+            const parcelasInput = document.getElementById('parcelas').value;
+            const dataInicioInput = document.getElementById('data-inicio').value;
+            const dataFinalInput = document.getElementById('data-final');
+
+            if (!dataInicioInput || !parcelasInput) return;
+
+            const parcelas = parseInt(parcelasInput);
+            if (parcelas < 1) return;
+
+            let [ano, mes] = dataInicioInput.split('-');
+            ano = parseInt(ano);
+            mes = parseInt(mes);
+
+            // Subtrai 1 porque o mês atual já conta como a 1ª parcela
+            let mesesAdicionais = parcelas - 1;
+            
+            let mesFinal = mes + mesesAdicionais;
+            let anoFinal = ano;
+
+            // Ajusta o ano se a soma dos meses passar de dezembro
+            while (mesFinal > 12) {
+                mesFinal -= 12;
+                anoFinal++;
+            }
+
+            // Formata o mês com 2 dígitos (ex: 05, 11)
+            const mesStr = mesFinal.toString().padStart(2, '0');
+            dataFinalInput.value = `${anoFinal}-${mesStr}`;
+        }
+
+        // Adiciona "escutadores" para calcular sempre que o usuário digitar ou alterar
+        document.getElementById('parcelas').addEventListener('input', atualizarMesFinal);
+        document.getElementById('data-inicio').addEventListener('input', atualizarMesFinal);
+
         window.onload = () => {
             const hoje = new Date();
             const mesAtual = `${hoje.getFullYear()}-${(hoje.getMonth()+1).toString().padStart(2, '0')}`;
             document.getElementById('data-inicio').value = mesAtual;
             document.getElementById('mes-filtro').value = mesAtual;
+            atualizarMesFinal(); // Calcula o mês final inicial
             carregarDespesas();
         };
 
@@ -150,6 +193,7 @@
             document.getElementById('desc').value = '';
             document.getElementById('valor').value = '';
             document.getElementById('parcelas').value = '1';
+            atualizarMesFinal(); // Atualiza o campo final de volta pro padrão
             carregarDespesas(); 
         });
 
@@ -192,7 +236,6 @@
                 }
             });
 
-            // Atualiza os Cards de KPI no Topo
             document.getElementById('kpi-total').innerText = `R$ ${total.toFixed(2)}`;
             document.getElementById('kpi-qtd').innerText = despesasFiltradas.length;
             document.getElementById('kpi-maior').innerText = `R$ ${maiorGasto.toFixed(2)}`;
