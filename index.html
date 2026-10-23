@@ -10,42 +10,98 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     
-    <!-- Link para o seu ficheiro CSS externo -->
-    <link rel="stylesheet" href="style.css">
-    
     <!-- Chart.js para o Gráfico de Pizza -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Ligação ao seu ficheiro CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>G&M Planilha</h1>
+    <header class="topbar">
+        <h1>G&M Planilha</h1>
+    </header>
 
-    <div id="app-section">
+    <div class="dashboard-container">
         
-        <h2>Adicionar Gasto</h2>
-        <input type="text" id="desc" placeholder="Descrição do Gasto">
-        <input type="number" id="valor" placeholder="Valor Total (R$)">
-        <input type="number" id="parcelas" placeholder="Qtd Parcelas" value="1" min="1">
-        <input type="month" id="data-inicio" required>
-        <button id="add-btn">Adicionar</button>
+        <!-- Painel Lateral (Formulários) -->
+        <aside class="sidebar">
+            <div class="card">
+                <h2>Adicionar Gasto</h2>
+                <div class="input-group">
+                    <label>Descrição</label>
+                    <input type="text" id="desc" placeholder="Ex: Mercado">
+                </div>
+                <div class="input-group">
+                    <label>Valor Total (R$)</label>
+                    <input type="number" id="valor" placeholder="0.00">
+                </div>
+                <div class="input-group-row">
+                    <div class="input-group">
+                        <label>Parcelas</label>
+                        <input type="number" id="parcelas" value="1" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Mês Inicial</label>
+                        <input type="month" id="data-inicio" required>
+                    </div>
+                </div>
+                <button id="add-btn" class="btn-primary">Adicionar Gasto</button>
+            </div>
 
-        <h2>Controle Financeiro</h2>
-        <input type="month" id="mes-filtro">
-        <button id="filter-btn">Filtrar Mês</button>
-        <button id="clear-btn">Apagar Dados Locais</button>
+            <div class="card">
+                <h2>Controle e Filtros</h2>
+                <div class="input-group">
+                    <label>Mês de Referência</label>
+                    <input type="month" id="mes-filtro">
+                </div>
+                <button id="filter-btn" class="btn-secondary">Filtrar Mês</button>
+                <button id="clear-btn" class="btn-danger">Apagar Todos os Dados</button>
+            </div>
+        </aside>
 
-        <div style="max-width: 400px; margin-top: 20px;">
-            <canvas id="graficoPizza"></canvas>
-        </div>
+        <!-- Área Principal (Resumos e Gráficos) -->
+        <main class="main-content">
+            
+            <!-- Cartões de Resumo (Valores) -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <h3>Total do Mês</h3>
+                    <p id="kpi-total">R$ 0,00</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Lançamentos</h3>
+                    <p id="kpi-qtd">0</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Maior Gasto</h3>
+                    <p id="kpi-maior">R$ 0,00</p>
+                </div>
+            </div>
 
-        <h2>Resumo do Mês</h2>
-        <ul id="lista-despesas"></ul>
+            <div class="content-grid">
+                <!-- Gráfico -->
+                <div class="card chart-container">
+                    <h2>Distribuição de Gastos</h2>
+                    <div class="canvas-wrapper">
+                        <canvas id="graficoPizza"></canvas>
+                    </div>
+                </div>
+
+                <!-- Lista de Despesas -->
+                <div class="card list-container">
+                    <h2>Resumo Detalhado</h2>
+                    <ul id="lista-despesas">
+                        <!-- Itens inseridos via JS -->
+                    </ul>
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <!-- Lógica JavaScript (Armazenamento Local) -->
     <script>
         let meuGrafico = null;
-        
         let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
 
         window.onload = () => {
@@ -96,19 +152,16 @@
             }
             
             salvarDados(); 
-            alert('Gasto adicionado com sucesso!');
-            
             document.getElementById('desc').value = '';
             document.getElementById('valor').value = '';
             document.getElementById('parcelas').value = '1';
-            
             carregarDespesas(); 
         });
 
         document.getElementById('filter-btn').addEventListener('click', carregarDespesas);
 
         document.getElementById('clear-btn').addEventListener('click', () => {
-            if(confirm('Tem certeza que deseja apagar todos os gastos cadastrados?')) {
+            if(confirm('Tem certeza de que deseja apagar todos os gastos registrados?')) {
                 despesas = [];
                 salvarDados();
                 carregarDespesas();
@@ -117,22 +170,23 @@
 
         function carregarDespesas() {
             const mesFiltro = document.getElementById('mes-filtro').value;
-            
             const despesasFiltradas = despesas.filter(d => d.mesAno === mesFiltro);
             
             const lista = document.getElementById('lista-despesas');
             lista.innerHTML = '';
             
             let total = 0;
+            let maiorGasto = 0;
             const labelsGrafico = [];
             const dadosGrafico = [];
 
             despesasFiltradas.forEach((d) => {
                 const li = document.createElement('li');
-                li.innerText = `${d.desc} - R$ ${d.valor.toFixed(2)}`;
+                li.innerHTML = `<span>${d.desc}</span> <strong>R$ ${d.valor.toFixed(2)}</strong>`;
                 lista.appendChild(li);
 
                 total += d.valor;
+                if (d.valor > maiorGasto) maiorGasto = d.valor;
                 
                 const index = labelsGrafico.findIndex(label => label === d.desc);
                 if(index === -1) {
@@ -143,37 +197,41 @@
                 }
             });
 
-            const totalLi = document.createElement('li');
-            totalLi.innerHTML = `<br><strong>TOTAL DO MÊS: R$ ${total.toFixed(2)}</strong>`;
-            lista.appendChild(totalLi);
+            // Atualiza os Cartões de Resumo (KPIs)
+            document.getElementById('kpi-total').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('kpi-qtd').innerText = despesasFiltradas.length;
+            document.getElementById('kpi-maior').innerText = `R$ ${maiorGasto.toFixed(2)}`;
+
+            if(despesasFiltradas.length === 0) {
+                lista.innerHTML = '<li style="justify-content:center; color:#94a3b8;">Nenhum gasto neste mês</li>';
+            }
 
             atualizarGrafico(labelsGrafico, dadosGrafico);
         }
 
         function atualizarGrafico(labels, data) {
             const ctx = document.getElementById('graficoPizza').getContext('2d');
-            
             if(meuGrafico) meuGrafico.destroy(); 
 
             if(data.length === 0) return;
 
             meuGrafico = new Chart(ctx, {
-                type: 'pie',
+                type: 'doughnut', // Mudado para 'doughnut' para um visual mais moderno de dashboard
                 data: {
                     labels: labels,
                     datasets: [{
                         data: data,
                         backgroundColor: [
-                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED', '#71B37C'
-                        ]
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'
+                        ],
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                        }
+                        legend: { position: 'right' }
                     }
                 }
             });
