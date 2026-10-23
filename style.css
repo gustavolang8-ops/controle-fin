@@ -1,0 +1,160 @@
+/* Reset básico e configurações de página */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+}
+
+/* Título G&M com a fonte Pacifico */
+h1 {
+    font-family: 'Pacifico', cursive;
+    color: #2c3e50;
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Containers principais estilo "Card" */
+#auth-section, #app-section {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+h2 {
+    font-size: 1.3rem;
+    color: #34495e;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+h2:first-child {
+    margin-top: 0;
+}
+
+/* Estilização de Inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="month"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    outline: none;
+}
+
+input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Estilização de Botões */
+button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-bottom: 0.8rem;
+}
+
+button:hover {
+    background-color: #2563eb;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Botões com cores específicas */
+#register-btn {
+    background-color: #fff;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+}
+
+#register-btn:hover {
+    background-color: #eff6ff;
+}
+
+#logout-btn {
+    background-color: #ef4444;
+    margin-bottom: 2rem;
+}
+
+#logout-btn:hover {
+    background-color: #dc2626;
+}
+
+#add-btn {
+    background-color: #10b981;
+}
+
+#add-btn:hover {
+    background-color: #059669;
+}
+
+/* Lista de Despesas */
+ul {
+    list-style-type: none;
+    margin-top: 1rem;
+}
+
+li {
+    background-color: #f8fafc;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Estilo para o Total do Mês */
+li:last-child {
+    background-color: transparent;
+    border-left: none;
+    padding: 1rem 0 0 0;
+    text-align: right;
+    display: block;
+}
+
+li strong {
+    font-size: 1.2rem;
+    color: #0f172a;
+}
+
+/* Ajuste do container do gráfico */
+canvas {
+    margin: 0 auto;
+}
