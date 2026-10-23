@@ -10,6 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Firebase SDKs (Versão Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -156,10 +161,25 @@
     </div>
 
     <script>
+        // Configuração do Firebase com suas chaves oficiais obtidas no painel
+        const firebaseConfig = {
+            apiKey: "AIzaSyBE8Z0aYK0BflL8bvCbDYXlqytehayeiWI",
+            authDomain: "gmplanilhas-185ff.firebaseapp.com",
+            projectId: "gmplanilhas-185ff",
+            storageBucket: "gmplanilhas-185ff.firebasestorage.app",
+            messagingSenderId: "578341373829",
+            appId: "1:578341373829:web:ff2fc4d136e6f5934ee6ec",
+            measurementId: "G-91K1CYVV00"
+        };
+
+        // Inicializa o Firebase e o Firestore
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let meuGrafico = null;
         let meuGraficoBarras = null;
-        let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
-        let rendasMensais = JSON.parse(localStorage.getItem('gm_rendas')) || {};
+        let despesas = [];
+        let rendasMensais = {};
 
         function formatarMoeda(valor) {
             return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -210,8 +230,7 @@
             inputRenda.value = formatarMoeda(valorRenda);
             
             rendasMensais[mesFiltro] = valorRenda;
-            localStorage.setItem('gm_rendas', JSON.stringify(rendasMensais));
-            carregarDespesas();
+            salvarDadosNuvem(); // Salva a renda direto no Firebase
         });
 
         function atualizarMesFinal() {
@@ -250,11 +269,36 @@
             document.getElementById('data-inicio').value = mesAtual;
             document.getElementById('mes-filtro').value = mesAtual;
             atualizarMesFinal();
-            carregarDespesas();
+            carregarDadosNuvem(); // Puxa os dados direto do Firebase ao abrir
         };
 
-        function salvarDados() {
-            localStorage.setItem('gm_despesas', JSON.stringify(despesas));
+        // Funções de sincronização com a nuvem do Firebase
+        function salvarDadosNuvem() {
+            db.collection("gm_planilha").doc("dados_gerais").set({
+                despesas: despesas,
+                rendasMensais: rendasMensais
+            }).then(() => {
+                carregarDespesas();
+            }).catch((error) => {
+                console.error("Erro ao sincronizar com o Firebase: ", error);
+            });
+        }
+
+        function carregarDadosNuvem() {
+            db.collection("gm_planilha").doc("dados_gerais").get().then((doc) => {
+                if (doc.exists) {
+                    const dados = doc.data();
+                    despesas = dados.despesas || [];
+                    rendasMensais = dados.rendasMensais || {};
+                } else {
+                    despesas = [];
+                    rendasMensais = {};
+                }
+                carregarDespesas();
+            }).catch((error) => {
+                console.error("Erro ao carregar do Firebase: ", error);
+                carregarDespesas();
+            });
         }
 
         document.getElementById('add-btn').addEventListener('click', () => {
@@ -299,20 +343,18 @@
                 });
             }
             
-            salvarDados(); 
             document.getElementById('desc').value = '';
             document.getElementById('valor').value = '';
             document.getElementById('valor-parcela').value = '';
             document.getElementById('parcelas').value = '1';
             atualizarMesFinal(); 
-            carregarDespesas(); 
+            salvarDadosNuvem(); // Salva e sincroniza automaticamente na nuvem
         });
 
         function apagarItem(id, nomeProduto) {
             if(confirm(`Tem certeza que deseja apagar "${nomeProduto}" e TODAS as suas parcelas?`)) {
                 despesas = despesas.filter(d => d.id !== id);
-                salvarDados();
-                carregarDespesas();
+                salvarDadosNuvem();
             }
         }
 
@@ -361,7 +403,6 @@
                 total += d.valor;
                 if (d.valor > maiorGasto) maiorGasto = d.valor;
                 
-                // Parcelas dessa compra (mesmo id) em relação ao mês filtrado
                 const parcelasDaCompra = despesas.filter(x => x.id === d.id);
                 const info = {
                     total: parcelasDaCompra.length,
@@ -422,13 +463,13 @@
                         backgroundColor: cores,
                         borderWidth: 2,
                         borderColor: '#ffffff',
-                        hoverOffset: 18 // fatia se desloca ao passar o mouse / tocar
+                        hoverOffset: 18
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: 20 }, // espaço para a fatia deslocada não ser cortada
+                    layout: { padding: 20 },
                     plugins: {
                         legend: { 
                             position: 'right',
