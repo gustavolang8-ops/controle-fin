@@ -43,7 +43,6 @@
                         <input type="text" id="desc" placeholder="O que você comprou?">
                     </div>
                     
-                    <!-- Linha com Total e Parcela lado a lado -->
                     <div class="form-row">
                         <div class="form-group">
                             <label>Valor Total (R$)</label>
@@ -75,12 +74,10 @@
 
                 <div class="box">
                     <h2>Filtro de Visualização</h2>
-                    <div class="form-group">
-                        <label>Consultar Mês</label>
-                        <input type="month" id="mes-filtro">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Selecione o Mês para Consultar</label>
+                        <input type="month" id="mes-filtro" style="border: 2px solid var(--primary);">
                     </div>
-                    <button id="filter-btn" class="btn-primary">Atualizar Dashboard</button>
-                    <button id="clear-btn" class="btn-danger mt-sm">Apagar Todo o Histórico</button>
                 </div>
             </div>
 
@@ -95,6 +92,7 @@
                 <div class="box">
                     <h2>Detalhes das Parcelas do Mês</h2>
                     <ul id="lista-despesas">
+                        <!-- Inserido via JS -->
                     </ul>
                 </div>
             </div>
@@ -120,7 +118,6 @@
         const inputParcela = document.getElementById('valor-parcela');
         const inputQtd = document.getElementById('parcelas');
 
-        // Lógica Bidirecional Inteligente
         inputTotal.addEventListener('blur', () => {
             const total = converterParaNumero(inputTotal.value);
             const qtd = parseInt(inputQtd.value) || 1;
@@ -176,6 +173,7 @@
         }
 
         document.getElementById('data-inicio').addEventListener('input', atualizarMesFinal);
+        document.getElementById('mes-filtro').addEventListener('input', carregarDespesas);
 
         window.onload = () => {
             const hoje = new Date();
@@ -194,8 +192,6 @@
             const desc = document.getElementById('desc').value;
             const parcelas = parseInt(document.getElementById('parcelas').value);
             const dataInicio = document.getElementById('data-inicio').value;
-            
-            // O sistema agora regista o valor exato da parcela
             const valorParcela = converterParaNumero(inputParcela.value);
 
             if(!desc || valorParcela <= 0 || !dataInicio || parcelas < 1) {
@@ -205,6 +201,8 @@
             let [ano, mes] = dataInicio.split('-');
             mes = parseInt(mes);
             ano = parseInt(ano);
+
+            const idCompra = Date.now().toString();
 
             for (let i = 0; i < parcelas; i++) {
                 let mesAtual = mes + i;
@@ -220,9 +218,11 @@
                 const sufixoParcela = parcelas > 1 ? ` (${i + 1}/${parcelas})` : '';
 
                 despesas.push({
+                    id: idCompra,
                     desc: desc + sufixoParcela,
-                    valor: valorParcela, // Grava a parcela (com ou sem juros)
-                    mesAno: mesAno
+                    valor: valorParcela,
+                    mesAno: mesAno,
+                    nomeOriginal: desc
                 });
             }
             
@@ -235,15 +235,13 @@
             carregarDespesas(); 
         });
 
-        document.getElementById('filter-btn').addEventListener('click', carregarDespesas);
-
-        document.getElementById('clear-btn').addEventListener('click', () => {
-            if(confirm('Tem certeza absoluta que deseja zerar todos os dados?')) {
-                despesas = [];
+        function apagarItem(id, nomeProduto) {
+            if(confirm(`Tem certeza que deseja apagar "${nomeProduto}" e TODAS as suas parcelas?`)) {
+                despesas = despesas.filter(d => d.id !== id);
                 salvarDados();
                 carregarDespesas();
             }
-        });
+        }
 
         function carregarDespesas() {
             const mesFiltro = document.getElementById('mes-filtro').value;
@@ -259,15 +257,31 @@
 
             despesasFiltradas.forEach((d) => {
                 const li = document.createElement('li');
-                li.innerHTML = `<span>${d.desc}</span> <strong>R$ ${formatarMoeda(d.valor)}</strong>`;
+                
+                li.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-desc">${d.desc}</span>
+                    </div>
+                    <div class="item-actions">
+                        <span class="item-val">R$ ${formatarMoeda(d.valor)}</span>
+                        <button class="btn-delete" title="Apagar Gasto" onclick="apagarItem('${d.id}', '${d.nomeOriginal}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                `;
                 lista.appendChild(li);
 
                 total += d.valor;
                 if (d.valor > maiorGasto) maiorGasto = d.valor;
                 
-                const index = labelsGrafico.findIndex(label => label === d.desc);
+                const index = labelsGrafico.findIndex(label => label === d.nomeOriginal);
                 if(index === -1) {
-                    labelsGrafico.push(d.desc);
+                    labelsGrafico.push(d.nomeOriginal);
                     dadosGrafico.push(d.valor);
                 } else {
                     dadosGrafico[index] += d.valor;
