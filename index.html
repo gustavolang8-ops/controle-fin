@@ -331,6 +331,7 @@
             const labelsGrafico = [];
             const dadosGrafico = [];
             const coresGrafico = [];
+            const infoGrafico = [];
 
             despesasFiltradas.forEach((d) => {
                 const li = document.createElement('li');
@@ -360,13 +361,25 @@
                 total += d.valor;
                 if (d.valor > maiorGasto) maiorGasto = d.valor;
                 
+                // Parcelas dessa compra (mesmo id) em relação ao mês filtrado
+                const parcelasDaCompra = despesas.filter(x => x.id === d.id);
+                const info = {
+                    total: parcelasDaCompra.length,
+                    pagas: parcelasDaCompra.filter(x => x.mesAno < mesFiltro).length,
+                    faltam: parcelasDaCompra.filter(x => x.mesAno > mesFiltro).length
+                };
+
                 const index = labelsGrafico.findIndex(label => label === d.nomeOriginal);
                 if(index === -1) {
                     labelsGrafico.push(d.nomeOriginal);
                     dadosGrafico.push(d.valor);
                     coresGrafico.push(d.cor || '#3b82f6');
+                    infoGrafico.push(info);
                 } else {
                     dadosGrafico[index] += d.valor;
+                    infoGrafico[index].total += info.total;
+                    infoGrafico[index].pagas += info.pagas;
+                    infoGrafico[index].faltam += info.faltam;
                 }
             });
 
@@ -390,11 +403,11 @@
                 lista.innerHTML = '<li class="empty-list">Nenhum gasto registrado para este mês.</li>';
             }
 
-            atualizarGrafico(labelsGrafico, dadosGrafico, coresGrafico);
+            atualizarGrafico(labelsGrafico, dadosGrafico, coresGrafico, infoGrafico);
             atualizarGraficoBarrasAnual();
         }
 
-        function atualizarGrafico(labels, data, cores) {
+        function atualizarGrafico(labels, data, cores, info) {
             const ctx = document.getElementById('graficoPizza').getContext('2d');
             if(meuGrafico) meuGrafico.destroy(); 
 
@@ -408,18 +421,38 @@
                         data: data,
                         backgroundColor: cores,
                         borderWidth: 2,
-                        borderColor: '#ffffff'
+                        borderColor: '#ffffff',
+                        hoverOffset: 18 // fatia se desloca ao passar o mouse / tocar
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: 20 }, // espaço para a fatia deslocada não ser cortada
                     plugins: {
                         legend: { 
                             position: 'right',
                             labels: {
                                 boxWidth: 12,
                                 font: { family: 'Inter', size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const i = context.dataIndex;
+                                    const valor = context.parsed;
+                                    const p = info[i];
+                                    const linhas = [`Valor no mês: R$ ${formatarMoeda(valor)}`];
+
+                                    if (p.total <= 1) {
+                                        linhas.push('Pagamento único');
+                                    } else {
+                                        linhas.push(`Parcelas pagas: ${p.pagas} de ${p.total}`);
+                                        linhas.push(`Parcelas que faltam: ${p.faltam}`);
+                                    }
+                                    return linhas;
+                                }
                             }
                         }
                     }
