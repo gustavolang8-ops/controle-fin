@@ -128,13 +128,23 @@
             </div>
 
             <div class="data-col">
+                <!-- Gráfico de Rosca (Distribuição do Mês) -->
                 <div class="box">
-                    <h2>Distribuição dos Gastos</h2>
+                    <h2>Distribuição dos Gastos (Mês Atual)</h2>
                     <div class="chart-container">
                         <canvas id="graficoPizza"></canvas>
                     </div>
                 </div>
+
+                <!-- Novo Gráfico de Barras (Evolução Anual) -->
+                <div class="box">
+                    <h2>Evolução dos Gastos por Ano</h2>
+                    <div class="chart-container">
+                        <canvas id="graficoBarrasAnual"></canvas>
+                    </div>
+                </div>
                 
+                <!-- Lista de Detalhes -->
                 <div class="box">
                     <h2>Detalhes das Parcelas do Mês</h2>
                     <ul id="lista-despesas">
@@ -147,6 +157,7 @@
 
     <script>
         let meuGrafico = null;
+        let meuGraficoBarras = null;
         let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
         let rendasMensais = JSON.parse(localStorage.getItem('gm_rendas')) || {};
 
@@ -381,6 +392,7 @@
             }
 
             atualizarGrafico(labelsGrafico, dadosGrafico, coresGrafico);
+            atualizarGraficoBarrasAnual();
         }
 
         function atualizarGrafico(labels, data, cores) {
@@ -410,6 +422,54 @@
                                 boxWidth: 12,
                                 font: { family: 'Inter', size: 12 }
                             }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para calcular e renderizar o Gráfico de Barras Anual
+        function atualizarGraficoBarrasAnual() {
+            const ctx = document.getElementById('graficoBarrasAnual').getContext('2d');
+            if(meuGraficoBarras) meuGraficoBarras.destroy();
+
+            // Agrupa os gastos por Ano (extraindo os 4 primeiros dígitos de "YYYY-MM")
+            const gastosPorAno = {};
+            despesas.forEach(d => {
+                const ano = d.mesAno.split('-')[0];
+                gastosPorAno[ano] = (gastosPorAno[ano] || 0) + d.valor;
+            });
+
+            // Ordena os anos em ordem crescente
+            const anosOrdenados = Object.keys(gastosPorAno).sort();
+            const valoresAnuais = anosOrdenados.map(ano => gastosPorAno[ano]);
+
+            if (anosOrdenados.length === 0) return;
+
+            meuGraficoBarras = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: anosOrdenados,
+                    datasets: [{
+                        label: 'Total Gasto no Ano (R$)',
+                        data: valoresAnuais,
+                        backgroundColor: '#06b6d4', // Cor ciano moderna parecida com a sua imagem de referência
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            grid: { display: false }
                         }
                     }
                 }
