@@ -19,7 +19,7 @@
     </header>
 
     <div class="container">
-        <!-- Cards de Resumo no Topo (Agora com 4 cartões incluindo o Saldo) -->
+        <!-- Cards de Resumo no Topo -->
         <div class="cards-row">
             <div class="kpi-card" style="border-left-color: #2563eb;">
                 <h3>Total de Gastos no Mês</h3>
@@ -49,6 +49,19 @@
                     <div class="form-group">
                         <label>Descrição (Ex: Apartamento, Nubank)</label>
                         <input type="text" id="desc" placeholder="O que você comprou?">
+                    </div>
+
+                    <!-- Novo campo de Categoria -->
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="categoria">
+                            <option value="Moradia">🏠 Moradia</option>
+                            <option value="Transporte">🚗 Transporte</option>
+                            <option value="Alimentação">🛒 Alimentação</option>
+                            <option value="Lazer">🎉 Lazer</option>
+                            <option value="Contas">💡 Contas Básicas</option>
+                            <option value="Outros" selected>📦 Outros</option>
+                        </select>
                     </div>
                     
                     <div class="form-row">
@@ -117,7 +130,6 @@
     <script>
         let meuGrafico = null;
         let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
-        // Rendas guardadas por mês (ex: {"2026-10": 5000})
         let rendasMensais = JSON.parse(localStorage.getItem('gm_rendas')) || {};
 
         function formatarMoeda(valor) {
@@ -163,7 +175,6 @@
             atualizarMesFinal();
         });
 
-        // Quando o utilizador altera a renda do mês selecionado
         inputRenda.addEventListener('blur', () => {
             const mesFiltro = document.getElementById('mes-filtro').value;
             const valorRenda = converterParaNumero(inputRenda.value);
@@ -219,6 +230,7 @@
 
         document.getElementById('add-btn').addEventListener('click', () => {
             const desc = document.getElementById('desc').value;
+            const categoria = document.getElementById('categoria').value;
             const parcelas = parseInt(document.getElementById('parcelas').value);
             const dataInicio = document.getElementById('data-inicio').value;
             const valorParcela = converterParaNumero(inputParcela.value);
@@ -250,6 +262,7 @@
                 despesas.push({
                     id: idCompra,
                     desc: desc + sufixoParcela,
+                    categoria: categoria,
                     valor: valorParcela,
                     mesAno: mesAno,
                     nomeOriginal: desc,
@@ -276,8 +289,6 @@
 
         function carregarDespesas() {
             const mesFiltro = document.getElementById('mes-filtro').value;
-            
-            // Carrega a renda salva para este mês específico
             const rendaAtual = rendasMensais[mesFiltro] || 0;
             inputRenda.value = formatarMoeda(rendaAtual);
 
@@ -296,9 +307,12 @@
                 const li = document.createElement('li');
                 
                 li.innerHTML = `
-                    <div class="item-info" style="display: flex; align-items: center; gap: 10px;">
-                        <span style="width: 12px; height: 12px; background-color: ${d.cor || '#2563eb'}; border-radius: 50%; display: inline-block;"></span>
-                        <span class="item-desc">${d.desc}</span>
+                    <div class="item-info">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span style="width: 10px; height: 10px; background-color: ${d.cor || '#2563eb'}; border-radius: 50%; display: inline-block;"></span>
+                            <span class="item-desc" style="margin-bottom:0;">${d.desc}</span>
+                        </div>
+                        <span class="badge-cat">${d.categoria || 'Outros'}</span>
                     </div>
                     <div class="item-actions">
                         <span class="item-val">R$ ${formatarMoeda(d.valor)}</span>
@@ -327,18 +341,16 @@
                 }
             });
 
-            // Cálculo do Saldo (Renda - Total de Gastos)
             const saldoRestante = rendaAtual - total;
             const elSaldo = document.getElementById('kpi-saldo');
             elSaldo.innerText = `R$ ${formatarMoeda(saldoRestante)}`;
             
-            // Altera a cor do card de saldo dependendo se está positivo ou negativo
             const cardSaldo = document.getElementById('card-saldo-container');
             if (saldoRestante < 0) {
-                cardSaldo.style.borderLeftColor = '#ef4444'; // Vermelho se negativo
+                cardSaldo.style.borderLeftColor = '#ef4444';
                 elSaldo.style.color = '#ef4444';
             } else {
-                cardSaldo.style.borderLeftColor = '#10b981'; // Verde se positivo
+                cardSaldo.style.borderLeftColor = '#10b981';
                 elSaldo.style.color = '#0f172a';
             }
 
