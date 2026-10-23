@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G&M Planilha</title>
+    <!-- Fonte Pacifico para o Título -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <!-- Chart.js para o Gráfico de Pizza -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Coloque o seu CSS aqui */
+        h1 {
+            font-family: 'Pacifico', cursive;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>G&M Planilha</h1>
+
+    <!-- Seção de Autenticação -->
+    <div id="auth-section">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="password" placeholder="Senha">
+        <button id="login-btn">Entrar</button>
+        <button id="register-btn">Registrar</button>
+    </div>
+
+    <!-- Seção Principal da Aplicação -->
+    <div id="app-section" style="display: none;">
+        <button id="logout-btn">Sair</button>
+        
+        <h2>Adicionar Gasto</h2>
+        <input type="text" id="desc" placeholder="Descrição do Gasto">
+        <input type="number" id="valor" placeholder="Valor Total (R$)">
+        <input type="number" id="parcelas" placeholder="Qtd Parcelas" value="1" min="1">
+        <input type="month" id="data-inicio" required>
+        <button id="add-btn">Adicionar</button>
+
+        <h2>Controle Financeiro</h2>
+        <input type="month" id="mes-filtro">
+        <button id="filter-btn">Filtrar Mês</button>
+
+        <!-- Gráfico de Pizza -->
+        <div style="max-width: 400px; margin-top: 20px;">
+            <canvas id="graficoPizza"></canvas>
+        </div>
+
+        <!-- Lista de Gastos -->
+        <h2>Resumo do Mês</h2>
+        <ul id="lista-despesas"></ul>
+    </div>
+
+    <!-- Lógica do Sistema -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        // IMPORTANTE: Insira as credenciais do seu Firebase aqui
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_AUTH_DOMAIN",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_STORAGE_BUCKET",
+            messagingSenderId: "SEU_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let meuGrafico = null;
+
+        const authSection = document.getElementById('auth-section');
+        const appSection = document.getElementById('app-section');
+
+        // Controle de Sessão
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authSection.style.display = 'none';
+                appSection.style.display = 'block';
+                carregarDespesas();
+            } else {
+                authSection.style.display = 'block';
+                appSection.style.display = 'none';
+            }
+        });
+
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
+        });
+
+        document.getElementById('register-btn').addEventListener('click', () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            createUserWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+        // Adicionar Gasto e Calcular Parcelas
+        document.getElementById('add-btn').addEventListener('click', async () => {
+            const desc = document.getElementById('desc').value;
+            const valorTotal = parseFloat(document.getElementById('valor').value);
+            const parcelas = parseInt(document.getElementById('parcelas').value);
+            const dataInicio = document.getElementById('data-inicio').value;
+
+            if(!desc || !valorTotal || !dataInicio || parcelas < 1) return alert('Preencha todos os campos corretamente!');
+
+            const valorParcela = valorTotal / parcelas;
+            let [ano, mes] = dataInicio.split('-');
+            mes = parseInt(mes);
+            ano = parseInt(ano);
+
+            for (let i = 0; i < parcelas; i++) {
+                let mesAtual = mes + i;
+                let anoAtual = ano;
+                
+                while (mesAtual > 12) {
+                    mesAtual -= 12;
+                    anoAtual++;
+                }
+
+                const mesStr = mesAtual.toString().padStart(2, '0');
+                const mesAno = `${anoAtual}-${mesStr}`;
+                const sufixoParcela = parcelas > 1 ? ` (${i + 1}/${parcelas})` : '';
+
+                await addDoc(collection(db, "despesas"), {
+                    userId: auth.currentUser.uid,
+                    desc: desc + sufixoParcela,
+                    valor: valorParcela,
+                    mesAno: mesAno
+                });
+            }
+            
+            alert('Gasto adicionado com sucesso!');
+            document.getElementById('desc').value = '';
+            document.getElementById('valor').value = '';
+            document.getElementById('parcelas').value = '1';
+            carregarDespesas();
+        });
+
+        document.getElementById('filter-btn').addEventListener('click', carregarDespesas);
+
+        // Carregar Gastos e Gerar Gráfico
+        async function carregarDespesas() {
+            if(!auth.currentUser) return;
+            
+            let mesFiltro = document.getElementById('mes-filtro').value;
+            if(!mesFiltro) {
+                const hoje = new Date();
+                mesFiltro = `${hoje.getFullYear()}-${(hoje.getMonth()+1).toString().padStart(2, '0')}`;
+                document.getElementById('mes-filtro').value = mesFiltro;
+            }
+
+            const q = query(collection(db, "despesas"), where("userId", "==", auth.currentUser.uid), where("mesAno", "==", mesFiltro));
+            const querySnapshot = await getDocs(q);
+            
+            const lista = document.getElementById('lista-despesas');
+            lista.innerHTML = '';
+            
+            let total = 0;
+            const labelsGrafico = [];
+            const dadosGrafico = [];
+
+            querySnapshot.forEach((doc) => {
+                const d = doc.data();
+                const li = document.createElement('li');
+                li.innerText = `${d.desc} - R$ ${d.valor.toFixed(2)}`;
+                lista.appendChild(li);
+
+                total += d.valor;
+                
+                // Prepara os dados para o gráfico
+                const index = labelsGrafico.indexOf(d.desc);
+                if(index === -1) {
+                    labelsGrafico.push(d.desc);
+                    dadosGrafico.push(d.valor);
+                } else {
+                    dadosGrafico[index] += d.valor;
+                }
+            });
+
+            const totalLi = document.createElement('li');
+            totalLi.innerHTML = `<br><strong>TOTAL DO MÊS: R$ ${total.toFixed(2)}</strong>`;
+            lista.appendChild(totalLi);
+
+            atualizarGrafico(labelsGrafico, dadosGrafico);
+        }
+
+        // Configuração do Chart.js
+        function atualizarGrafico(labels, data) {
+            const ctx = document.getElementById('graficoPizza').getContext('2d');
+            
+            if(meuGrafico) meuGrafico.destroy(); // Destrói o gráfico anterior para não sobrepor
+
+            meuGrafico = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED', '#71B37C'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
