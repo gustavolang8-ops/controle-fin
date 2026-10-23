@@ -128,7 +128,7 @@
             </div>
 
             <div class="data-col">
-                <!-- Gráfico de Rosca (Distribuição do Mês) -->
+                <!-- Gráfico de Rosca (Distribuição do Mês) com o Canvas restaurado -->
                 <div class="box">
                     <h2>Distribuição dos Gastos (Mês Atual)</h2>
                     <div class="chart-container">
@@ -136,7 +136,7 @@
                     </div>
                 </div>
 
-                <!-- Novo Gráfico de Barras (Evolução Anual) -->
+                <!-- Gráfico de Barras (Evolução Anual) com o Canvas restaurado -->
                 <div class="box">
                     <h2>Evolução dos Gastos por Ano</h2>
                     <div class="chart-container">
@@ -428,19 +428,16 @@
             });
         }
 
-        // Função para calcular e renderizar o Gráfico de Barras Anual
         function atualizarGraficoBarrasAnual() {
             const ctx = document.getElementById('graficoBarrasAnual').getContext('2d');
             if(meuGraficoBarras) meuGraficoBarras.destroy();
 
-            // Agrupa os gastos por Ano (extraindo os 4 primeiros dígitos de "YYYY-MM")
             const gastosPorAno = {};
             despesas.forEach(d => {
                 const ano = d.mesAno.split('-')[0];
                 gastosPorAno[ano] = (gastosPorAno[ano] || 0) + d.valor;
             });
 
-            // Ordena os anos em ordem crescente
             const anosOrdenados = Object.keys(gastosPorAno).sort();
             const valoresAnuais = anosOrdenados.map(ano => gastosPorAno[ano]);
 
@@ -453,7 +450,7 @@
                     datasets: [{
                         label: 'Total Gasto no Ano (R$)',
                         data: valoresAnuais,
-                        backgroundColor: '#06b6d4', // Cor ciano moderna parecida com a sua imagem de referência
+                        backgroundColor: '#06b6d4',
                         borderRadius: 6
                     }]
                 },
