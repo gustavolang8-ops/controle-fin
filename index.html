@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>G&M Planilha</title>
     
-    <!-- Fontes: Pacifico (Título) e Inter (Textos e Números) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Pacifico&display=swap" rel="stylesheet">
@@ -20,8 +19,6 @@
     </header>
 
     <div class="container">
-        
-        <!-- Cards de Resumo no Topo -->
         <div class="cards-row">
             <div class="kpi-card">
                 <h3>Total a Pagar no Mês</h3>
@@ -38,22 +35,29 @@
         </div>
 
         <div class="main-grid">
-            
-            <!-- Coluna Esquerda: Ações -->
             <div class="actions-col">
                 <div class="box">
                     <h2>Adicionar Gasto</h2>
                     <div class="form-group">
-                        <label>Descrição (Ex: Mercado, Nubank)</label>
+                        <label>Descrição (Ex: Apartamento, Nubank)</label>
                         <input type="text" id="desc" placeholder="O que você comprou?">
                     </div>
-                    <div class="form-group">
-                        <label>Valor Total (R$)</label>
-                        <input type="text" id="valor" placeholder="Ex: 180.000,00">
-                    </div>
+                    
+                    <!-- Linha com Total e Parcela lado a lado -->
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Parcelas</label>
+                            <label>Valor Total (R$)</label>
+                            <input type="text" id="valor" placeholder="Opcional se souber a parcela">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor da Parcela (R$)</label>
+                            <input type="text" id="valor-parcela" placeholder="Ex: 945,00">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Qtd Parcelas</label>
                             <input type="number" id="parcelas" value="1" min="1">
                         </div>
                         <div class="form-group">
@@ -61,7 +65,6 @@
                             <input type="month" id="data-inicio" required>
                         </div>
                     </div>
-                    <!-- Campo de Mês Final Automático -->
                     <div class="form-group">
                         <label>Mês Final (Calculado Automático)</label>
                         <input type="month" id="data-final" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
@@ -81,7 +84,6 @@
                 </div>
             </div>
 
-            <!-- Coluna Direita: Dados -->
             <div class="data-col">
                 <div class="box">
                     <h2>Distribuição dos Gastos</h2>
@@ -93,11 +95,9 @@
                 <div class="box">
                     <h2>Detalhes das Parcelas do Mês</h2>
                     <ul id="lista-despesas">
-                        <!-- Inserido via JS -->
                     </ul>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -105,12 +105,49 @@
         let meuGrafico = null;
         let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
 
-        // Formata os números para o padrão brasileiro de moeda (ex: 180.000,00)
         function formatarMoeda(valor) {
             return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        // Função para calcular automaticamente o Mês Final
+        function converterParaNumero(valorString) {
+            if (!valorString) return 0;
+            let limpo = String(valorString).replace(/[^\d,]/g, '');
+            limpo = limpo.replace(',', '.');
+            return parseFloat(limpo) || 0;
+        }
+
+        const inputTotal = document.getElementById('valor');
+        const inputParcela = document.getElementById('valor-parcela');
+        const inputQtd = document.getElementById('parcelas');
+
+        // Lógica Bidirecional Inteligente
+        inputTotal.addEventListener('blur', () => {
+            const total = converterParaNumero(inputTotal.value);
+            const qtd = parseInt(inputQtd.value) || 1;
+            if (total > 0) {
+                inputTotal.value = formatarMoeda(total);
+                inputParcela.value = formatarMoeda(total / qtd);
+            }
+        });
+
+        inputParcela.addEventListener('blur', () => {
+            const parcela = converterParaNumero(inputParcela.value);
+            const qtd = parseInt(inputQtd.value) || 1;
+            if (parcela > 0) {
+                inputParcela.value = formatarMoeda(parcela);
+                inputTotal.value = formatarMoeda(parcela * qtd);
+            }
+        });
+
+        inputQtd.addEventListener('input', () => {
+            const total = converterParaNumero(inputTotal.value);
+            const qtd = parseInt(inputQtd.value) || 1;
+            if (total > 0) {
+                inputParcela.value = formatarMoeda(total / qtd);
+            }
+            atualizarMesFinal();
+        });
+
         function atualizarMesFinal() {
             const parcelasInput = document.getElementById('parcelas').value;
             const dataInicioInput = document.getElementById('data-inicio').value;
@@ -138,7 +175,6 @@
             dataFinalInput.value = `${anoFinal}-${mesStr}`;
         }
 
-        document.getElementById('parcelas').addEventListener('input', atualizarMesFinal);
         document.getElementById('data-inicio').addEventListener('input', atualizarMesFinal);
 
         window.onload = () => {
@@ -156,24 +192,16 @@
 
         document.getElementById('add-btn').addEventListener('click', () => {
             const desc = document.getElementById('desc').value;
-            let valorBruto = document.getElementById('valor').value;
             const parcelas = parseInt(document.getElementById('parcelas').value);
             const dataInicio = document.getElementById('data-inicio').value;
+            
+            // O sistema agora regista o valor exato da parcela
+            const valorParcela = converterParaNumero(inputParcela.value);
 
-            // Tratamento do valor: remove pontos e troca vírgula por ponto para o cálculo
-            valorBruto = valorBruto.replace(/\./g, '').replace(',', '.');
-            const valorTotal = parseFloat(valorBruto);
-
-            if(!desc || isNaN(valorTotal) || !dataInicio || parcelas < 1) {
-                return alert('Preencha todos os campos corretamente!');
+            if(!desc || valorParcela <= 0 || !dataInicio || parcelas < 1) {
+                return alert('Preencha os campos de descrição, valor e data corretamente!');
             }
 
-            // Filtro de limite máximo: 200.000
-            if(valorTotal > 200000) {
-                return alert('O valor máximo permitido por gasto é de R$ 200.000,00.');
-            }
-
-            const valorParcela = valorTotal / parcelas;
             let [ano, mes] = dataInicio.split('-');
             mes = parseInt(mes);
             ano = parseInt(ano);
@@ -193,7 +221,7 @@
 
                 despesas.push({
                     desc: desc + sufixoParcela,
-                    valor: valorParcela,
+                    valor: valorParcela, // Grava a parcela (com ou sem juros)
                     mesAno: mesAno
                 });
             }
@@ -201,6 +229,7 @@
             salvarDados(); 
             document.getElementById('desc').value = '';
             document.getElementById('valor').value = '';
+            document.getElementById('valor-parcela').value = '';
             document.getElementById('parcelas').value = '1';
             atualizarMesFinal(); 
             carregarDespesas(); 
