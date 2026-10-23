@@ -3,41 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G&M Planilha</title>
+    <title>G&M Planilha - Controle Financeiro</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <h1>G&M Planilha</h1>
+    <header class="header-app">
+        <div class="header-content">
+            <h1>G&M Planilha</h1>
+            <p>Controle financeiro inteligente</p>
+        </div>
     </header>
 
     <div class="container">
         <!-- Cards de Resumo no Topo -->
         <div class="cards-row">
-            <div class="kpi-card" style="border-left-color: #2563eb;">
-                <h3>Total de Gastos no Mês</h3>
+            <div class="kpi-card card-blue">
+                <div class="kpi-header">
+                    <h3>Total de Gastos</h3>
+                    <span class="kpi-icon">📉</span>
+                </div>
                 <p id="kpi-total">R$ 0,00</p>
             </div>
-            <div class="kpi-card" style="border-left-color: #10b981;">
-                <h3>Renda do Mês</h3>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
-                    <span style="font-size: 1.5rem; font-weight: 700;">R$</span>
-                    <input type="text" id="input-renda" value="0,00" style="font-size: 1.5rem; font-weight: 700; padding: 2px 8px; height: 40px;" placeholder="0,00">
+            
+            <div class="kpi-card card-green">
+                <div class="kpi-header">
+                    <h3>Renda do Mês</h3>
+                    <span class="kpi-icon">💰</span>
+                </div>
+                <div class="input-renda-wrapper">
+                    <span>R$</span>
+                    <input type="text" id="input-renda" value="0,00" placeholder="0,00">
                 </div>
             </div>
-            <div class="kpi-card" style="border-left-color: #8b5cf6;" id="card-saldo-container">
-                <h3>Saldo Restante</h3>
+
+            <div class="kpi-card card-purple" id="card-saldo-container">
+                <div class="kpi-header">
+                    <h3>Saldo Restante</h3>
+                    <span class="kpi-icon">✨</span>
+                </div>
                 <p id="kpi-saldo">R$ 0,00</p>
             </div>
-            <div class="kpi-card" style="border-left-color: #f59e0b;">
-                <h3>Maior Parcela/Gasto</h3>
+
+            <div class="kpi-card card-orange">
+                <div class="kpi-header">
+                    <h3>Maior Parcela</h3>
+                    <span class="kpi-icon">📊</span>
+                </div>
                 <p id="kpi-maior">R$ 0,00</p>
             </div>
         </div>
@@ -45,13 +63,13 @@
         <div class="main-grid">
             <div class="actions-col">
                 <div class="box">
-                    <h2>Adicionar Gasto</h2>
+                    <h2>Adicionar Novo Gasto</h2>
+                    
                     <div class="form-group">
-                        <label>Descrição (Ex: Apartamento, Nubank)</label>
-                        <input type="text" id="desc" placeholder="O que você comprou?">
+                        <label>Descrição</label>
+                        <input type="text" id="desc" placeholder="Ex: Apartamento, Nubank...">
                     </div>
 
-                    <!-- Novo campo de Categoria -->
                     <div class="form-group">
                         <label>Categoria</label>
                         <select id="categoria">
@@ -70,7 +88,7 @@
                             <input type="text" id="valor" placeholder="Opcional">
                         </div>
                         <div class="form-group">
-                            <label>Valor da Parcela (R$)</label>
+                            <label>Parcela (R$)</label>
                             <input type="text" id="valor-parcela" placeholder="Ex: 945,00">
                         </div>
                     </div>
@@ -89,11 +107,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Mês Final (Automático)</label>
-                            <input type="month" id="data-final" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
+                            <input type="month" id="data-final" disabled>
                         </div>
                         <div class="form-group">
-                            <label>Cor no Gráfico</label>
-                            <input type="color" id="cor-gasto" value="#2563eb" style="height: 42px; padding: 4px; cursor: pointer;">
+                            <label>Cor na Fatura</label>
+                            <input type="color" id="cor-gasto" value="#3b82f6">
                         </div>
                     </div>
                     
@@ -101,10 +119,10 @@
                 </div>
 
                 <div class="box">
-                    <h2>Filtro de Visualização</h2>
+                    <h2>Filtro de Mês</h2>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Selecione o Mês para Consultar</label>
-                        <input type="month" id="mes-filtro" style="border: 2px solid var(--primary);">
+                        <label>Mês de Consulta</label>
+                        <input type="month" id="mes-filtro" class="input-filter">
                     </div>
                 </div>
             </div>
@@ -308,16 +326,16 @@
                 
                 li.innerHTML = `
                     <div class="item-info">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <span style="width: 10px; height: 10px; background-color: ${d.cor || '#2563eb'}; border-radius: 50%; display: inline-block;"></span>
-                            <span class="item-desc" style="margin-bottom:0;">${d.desc}</span>
+                        <div class="item-title-row">
+                            <span class="item-dot" style="background-color: ${d.cor || '#3b82f6'};"></span>
+                            <span class="item-desc">${d.desc}</span>
                         </div>
                         <span class="badge-cat">${d.categoria || 'Outros'}</span>
                     </div>
                     <div class="item-actions">
                         <span class="item-val">R$ ${formatarMoeda(d.valor)}</span>
                         <button class="btn-delete" title="Apagar Gasto" onclick="apagarItem('${d.id}', '${d.nomeOriginal}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                 <line x1="10" y1="11" x2="10" y2="17"></line>
@@ -335,7 +353,7 @@
                 if(index === -1) {
                     labelsGrafico.push(d.nomeOriginal);
                     dadosGrafico.push(d.valor);
-                    coresGrafico.push(d.cor || '#2563eb');
+                    coresGrafico.push(d.cor || '#3b82f6');
                 } else {
                     dadosGrafico[index] += d.valor;
                 }
@@ -347,10 +365,10 @@
             
             const cardSaldo = document.getElementById('card-saldo-container');
             if (saldoRestante < 0) {
-                cardSaldo.style.borderLeftColor = '#ef4444';
+                cardSaldo.classList.add('card-danger');
                 elSaldo.style.color = '#ef4444';
             } else {
-                cardSaldo.style.borderLeftColor = '#10b981';
+                cardSaldo.classList.remove('card-danger');
                 elSaldo.style.color = '#0f172a';
             }
 
@@ -359,7 +377,7 @@
             document.getElementById('kpi-maior').innerText = `R$ ${formatarMoeda(maiorGasto)}`;
 
             if(despesasFiltradas.length === 0) {
-                lista.innerHTML = '<li style="justify-content:center; color:#94a3b8; border:none;">Nenhum gasto para este mês.</li>';
+                lista.innerHTML = '<li class="empty-list">Nenhum gasto registrado para este mês.</li>';
             }
 
             atualizarGrafico(labelsGrafico, dadosGrafico, coresGrafico);
@@ -378,14 +396,21 @@
                     datasets: [{
                         data: data,
                         backgroundColor: cores,
-                        borderWidth: 0
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right' }
+                        legend: { 
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: { family: 'Inter', size: 12 }
+                            }
+                        }
                     }
                 }
             });
