@@ -26,7 +26,6 @@ body {
     padding-bottom: 4rem;
 }
 
-/* Header Estilizado */
 .header-app {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     color: white;
@@ -55,7 +54,6 @@ body {
     padding: 0 1.5rem;
 }
 
-/* Cards de KPI Modernos */
 .cards-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -108,7 +106,6 @@ body {
     color: var(--text-dark);
 }
 
-/* Input de Renda Integrado no Card */
 .input-renda-wrapper {
     display: flex;
     align-items: center;
@@ -136,7 +133,6 @@ body {
     color: var(--primary);
 }
 
-/* Layout em Grid Principal */
 .main-grid {
     display: grid;
     grid-template-columns: 380px 1fr;
@@ -233,7 +229,6 @@ button {
     transform: translateY(-1px);
 }
 
-/* Gráfico e Lista */
 .chart-container {
     position: relative;
     height: 300px;
