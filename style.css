@@ -42,7 +42,6 @@ h1 {
     padding: 0 1rem;
 }
 
-/* Ajustado para 4 colunas nos cartões de KPI */
 .cards-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -73,7 +72,6 @@ h1 {
     color: var(--text-dark);
 }
 
-/* Estilo para o campo de input da Renda dentro do card */
 #input-renda {
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -126,7 +124,7 @@ label {
     margin-bottom: 0.4rem;
 }
 
-input {
+input, select {
     width: 100%;
     padding: 0.8rem;
     border: 1px solid var(--border);
@@ -138,11 +136,11 @@ input {
     background-color: #fff;
 }
 
-input[type="month"] {
+input[type="month"], select {
     cursor: pointer;
 }
 
-input:focus {
+input:focus, select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
@@ -213,7 +211,20 @@ li:last-child { border-bottom: none; }
     flex-grow: 1;
 }
 
-.item-desc { color: var(--text-muted); margin-bottom: 0.2rem; }
+.item-desc { color: var(--text-dark); font-weight: 600; }
+
+/* Estilo para a etiqueta de categoria */
+.badge-cat {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background-color: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
 .item-val { color: var(--text-dark); font-weight: 600; }
 
 .item-actions {
