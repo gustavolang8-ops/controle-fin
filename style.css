@@ -24,6 +24,7 @@ body {
     background-color: var(--bg-app);
     color: var(--text-dark);
     padding-bottom: 4rem;
+    overflow-x: hidden; /* Evita rolagem lateral indesejada no telemóvel */
 }
 
 .header-app {
@@ -32,12 +33,12 @@ body {
     padding: 2.5rem 1rem;
     text-align: center;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
 }
 
 .header-content h1 {
     font-family: 'Pacifico', cursive;
-    font-size: 3rem;
+    font-size: 2.8rem;
     margin-bottom: 0.3rem;
     letter-spacing: 1px;
 }
@@ -48,17 +49,18 @@ body {
     font-weight: 400;
 }
 
+/* Garante margens seguras e centralização perfeita em qualquer ecrã */
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 1rem;
 }
 
 .cards-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 2rem;
 }
 
 .kpi-card {
@@ -67,12 +69,6 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     border-top: 4px solid var(--primary);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.kpi-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08);
 }
 
 .card-blue { border-top-color: #3b82f6; }
@@ -129,14 +125,10 @@ body {
     padding: 0;
 }
 
-#input-renda:focus {
-    color: var(--primary);
-}
-
 .main-grid {
     display: grid;
     grid-template-columns: 380px 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 @media (max-width: 950px) {
@@ -147,16 +139,16 @@ body {
 
 .box {
     background: var(--bg-box);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 h2 {
     font-size: 1.15rem;
     color: var(--text-dark);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
     padding-bottom: 0.8rem;
     border-bottom: 2px solid #f8fafc;
     font-weight: 600;
@@ -170,7 +162,7 @@ label {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-muted);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
 input, select {
@@ -195,11 +187,15 @@ input[type="month"], select {
     cursor: pointer;
 }
 
+/* Ajuste específico para o seletor de cor não estourar no telemóvel */
 input[type="color"] {
-    height: 46px;
+    width: 100%;
+    height: 48px;
     padding: 4px;
     cursor: pointer;
     background-color: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid var(--border);
 }
 
 #data-final {
@@ -226,12 +222,11 @@ button {
 }
 .btn-success:hover { 
     background-color: var(--success-hover); 
-    transform: translateY(-1px);
 }
 
 .chart-container {
     position: relative;
-    height: 300px;
+    height: 280px;
     width: 100%;
 }
 
@@ -239,7 +234,7 @@ ul {
     list-style: none;
     max-height: 420px;
     overflow-y: auto;
-    padding-right: 0.5rem;
+    padding-right: 0.2rem;
 }
 
 ul::-webkit-scrollbar { width: 6px; }
@@ -249,17 +244,9 @@ li {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.1rem 0;
+    padding: 1rem 0;
     border-bottom: 1px solid #f1f5f9;
     font-size: 0.95rem;
-    transition: background 0.2s;
-}
-
-li:hover {
-    background-color: #fafafa;
-    padding-left: 5px;
-    padding-right: 5px;
-    border-radius: 8px;
 }
 
 li:last-child { border-bottom: none; }
@@ -314,7 +301,7 @@ li:last-child { border-bottom: none; }
 .item-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.8rem;
 }
 
 .btn-delete {
