@@ -49,7 +49,7 @@
                     </div>
                     <div class="form-group">
                         <label>Valor Total (R$)</label>
-                        <input type="number" id="valor" placeholder="0.00">
+                        <input type="text" id="valor" placeholder="Ex: 180.000,00">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -61,7 +61,7 @@
                             <input type="month" id="data-inicio" required>
                         </div>
                     </div>
-                    <!-- Novo campo de Mês Final Automático -->
+                    <!-- Campo de Mês Final Automático -->
                     <div class="form-group">
                         <label>Mês Final (Calculado Automático)</label>
                         <input type="month" id="data-final" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
@@ -105,6 +105,11 @@
         let meuGrafico = null;
         let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
 
+        // Formata os números para o padrão brasileiro de moeda (ex: 180.000,00)
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         // Função para calcular automaticamente o Mês Final
         function atualizarMesFinal() {
             const parcelasInput = document.getElementById('parcelas').value;
@@ -120,24 +125,19 @@
             ano = parseInt(ano);
             mes = parseInt(mes);
 
-            // Subtrai 1 porque o mês atual já conta como a 1ª parcela
             let mesesAdicionais = parcelas - 1;
-            
             let mesFinal = mes + mesesAdicionais;
             let anoFinal = ano;
 
-            // Ajusta o ano se a soma dos meses passar de dezembro
             while (mesFinal > 12) {
                 mesFinal -= 12;
                 anoFinal++;
             }
 
-            // Formata o mês com 2 dígitos (ex: 05, 11)
             const mesStr = mesFinal.toString().padStart(2, '0');
             dataFinalInput.value = `${anoFinal}-${mesStr}`;
         }
 
-        // Adiciona "escutadores" para calcular sempre que o usuário digitar ou alterar
         document.getElementById('parcelas').addEventListener('input', atualizarMesFinal);
         document.getElementById('data-inicio').addEventListener('input', atualizarMesFinal);
 
@@ -146,7 +146,7 @@
             const mesAtual = `${hoje.getFullYear()}-${(hoje.getMonth()+1).toString().padStart(2, '0')}`;
             document.getElementById('data-inicio').value = mesAtual;
             document.getElementById('mes-filtro').value = mesAtual;
-            atualizarMesFinal(); // Calcula o mês final inicial
+            atualizarMesFinal();
             carregarDespesas();
         };
 
@@ -156,12 +156,21 @@
 
         document.getElementById('add-btn').addEventListener('click', () => {
             const desc = document.getElementById('desc').value;
-            const valorTotal = parseFloat(document.getElementById('valor').value);
+            let valorBruto = document.getElementById('valor').value;
             const parcelas = parseInt(document.getElementById('parcelas').value);
             const dataInicio = document.getElementById('data-inicio').value;
 
-            if(!desc || !valorTotal || !dataInicio || parcelas < 1) {
+            // Tratamento do valor: remove pontos e troca vírgula por ponto para o cálculo
+            valorBruto = valorBruto.replace(/\./g, '').replace(',', '.');
+            const valorTotal = parseFloat(valorBruto);
+
+            if(!desc || isNaN(valorTotal) || !dataInicio || parcelas < 1) {
                 return alert('Preencha todos os campos corretamente!');
+            }
+
+            // Filtro de limite máximo: 200.000
+            if(valorTotal > 200000) {
+                return alert('O valor máximo permitido por gasto é de R$ 200.000,00.');
             }
 
             const valorParcela = valorTotal / parcelas;
@@ -193,7 +202,7 @@
             document.getElementById('desc').value = '';
             document.getElementById('valor').value = '';
             document.getElementById('parcelas').value = '1';
-            atualizarMesFinal(); // Atualiza o campo final de volta pro padrão
+            atualizarMesFinal(); 
             carregarDespesas(); 
         });
 
@@ -221,7 +230,7 @@
 
             despesasFiltradas.forEach((d) => {
                 const li = document.createElement('li');
-                li.innerHTML = `<span>${d.desc}</span> <strong>R$ ${d.valor.toFixed(2)}</strong>`;
+                li.innerHTML = `<span>${d.desc}</span> <strong>R$ ${formatarMoeda(d.valor)}</strong>`;
                 lista.appendChild(li);
 
                 total += d.valor;
@@ -236,9 +245,9 @@
                 }
             });
 
-            document.getElementById('kpi-total').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('kpi-total').innerText = `R$ ${formatarMoeda(total)}`;
             document.getElementById('kpi-qtd').innerText = despesasFiltradas.length;
-            document.getElementById('kpi-maior').innerText = `R$ ${maiorGasto.toFixed(2)}`;
+            document.getElementById('kpi-maior').innerText = `R$ ${formatarMoeda(maiorGasto)}`;
 
             if(despesasFiltradas.length === 0) {
                 lista.innerHTML = '<li style="justify-content:center; color:#94a3b8; border:none;">Nenhum gasto para este mês.</li>';
