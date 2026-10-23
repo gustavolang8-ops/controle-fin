@@ -150,10 +150,9 @@ button {
 .btn-success { background: var(--success); }
 .btn-success:hover { background: #059669; }
 
-/* Estilo Minimalista para o Botão de Lixeira */
 .btn-delete {
     background: transparent;
-    color: #cbd5e1; /* Cor cinza suave padrão */
+    color: #cbd5e1;
     border: none;
     width: auto;
     padding: 0.2rem;
@@ -164,7 +163,6 @@ button {
     transition: color 0.2s ease;
 }
 
-/* Fica vermelho apenas ao passar o rato por cima */
 .btn-delete:hover {
     color: var(--danger);
     background: transparent;
@@ -209,5 +207,5 @@ li:last-child { border-bottom: none; }
 .item-actions {
     display: flex;
     align-items: center;
-    gap: 0.8rem; /* Mantém o ícone bem pertinho e alinhado ao lado do valor */
+    gap: 0.8rem;
 }
