@@ -21,18 +21,8 @@
 
     <h1>G&M Planilha</h1>
 
-    <!-- Seção de Autenticação -->
-    <div id="auth-section">
-        <h2>Login</h2>
-        <input type="email" id="email" placeholder="E-mail">
-        <input type="password" id="password" placeholder="Senha">
-        <button id="login-btn">Entrar</button>
-        <button id="register-btn">Registrar</button>
-    </div>
-
-    <!-- Seção Principal da Aplicação -->
-    <div id="app-section" style="display: none;">
-        <button id="logout-btn">Sair</button>
+    <!-- Seção Principal da Aplicação (Agora visível por padrão) -->
+    <div id="app-section">
         
         <h2>Adicionar Gasto</h2>
         <input type="text" id="desc" placeholder="Descrição do Gasto">
@@ -44,6 +34,7 @@
         <h2>Controle Financeiro</h2>
         <input type="month" id="mes-filtro">
         <button id="filter-btn">Filtrar Mês</button>
+        <button id="clear-btn" style="background-color: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Apagar Dados Locais</button>
 
         <!-- Gráfico de Pizza -->
         <div style="max-width: 400px; margin-top: 20px;">
@@ -55,65 +46,37 @@
         <ul id="lista-despesas"></ul>
     </div>
 
-    <!-- Lógica do Sistema -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+    <!-- Lógica do Sistema usando LocalStorage (sem banco de dados) -->
+    <script>
+        let meuGrafico = null;
+        
+        // Recupera os dados salvos no navegador ou inicia um array vazio
+        let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
 
-        // IMPORTANTE: Insira as credenciais do seu Firebase aqui
-        const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_AUTH_DOMAIN",
-            projectId: "SEU_PROJECT_ID",
-            storageBucket: "SEU_STORAGE_BUCKET",
-            messagingSenderId: "SEU_SENDER_ID",
-            appId: "SEU_APP_ID"
+        // Inicializa o mês de filtro com o mês atual ao carregar a página
+        window.onload = () => {
+            const hoje = new Date();
+            const mesAtual = `${hoje.getFullYear()}-${(hoje.getMonth()+1).toString().padStart(2, '0')}`;
+            document.getElementById('data-inicio').value = mesAtual;
+            document.getElementById('mes-filtro').value = mesAtual;
+            carregarDespesas();
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let meuGrafico = null;
-
-        const authSection = document.getElementById('auth-section');
-        const appSection = document.getElementById('app-section');
-
-        // Controle de Sessão
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                authSection.style.display = 'none';
-                appSection.style.display = 'block';
-                carregarDespesas();
-            } else {
-                authSection.style.display = 'block';
-                appSection.style.display = 'none';
-            }
-        });
-
-        document.getElementById('login-btn').addEventListener('click', () => {
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
-        });
-
-        document.getElementById('register-btn').addEventListener('click', () => {
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('password').value;
-            createUserWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
-        });
-
-        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+        // Função para salvar no LocalStorage
+        function salvarDados() {
+            localStorage.setItem('gm_despesas', JSON.stringify(despesas));
+        }
 
         // Adicionar Gasto e Calcular Parcelas
-        document.getElementById('add-btn').addEventListener('click', async () => {
+        document.getElementById('add-btn').addEventListener('click', () => {
             const desc = document.getElementById('desc').value;
             const valorTotal = parseFloat(document.getElementById('valor').value);
             const parcelas = parseInt(document.getElementById('parcelas').value);
             const dataInicio = document.getElementById('data-inicio').value;
 
-            if(!desc || !valorTotal || !dataInicio || parcelas < 1) return alert('Preencha todos os campos corretamente!');
+            if(!desc || !valorTotal || !dataInicio || parcelas < 1) {
+                return alert('Preencha todos os campos corretamente!');
+            }
 
             const valorParcela = valorTotal / parcelas;
             let [ano, mes] = dataInicio.split('-');
@@ -133,36 +96,42 @@
                 const mesAno = `${anoAtual}-${mesStr}`;
                 const sufixoParcela = parcelas > 1 ? ` (${i + 1}/${parcelas})` : '';
 
-                await addDoc(collection(db, "despesas"), {
-                    userId: auth.currentUser.uid,
+                // Adiciona a despesa ao array local
+                despesas.push({
                     desc: desc + sufixoParcela,
                     valor: valorParcela,
                     mesAno: mesAno
                 });
             }
             
+            salvarDados(); // Salva no navegador
             alert('Gasto adicionado com sucesso!');
+            
+            // Limpa os campos
             document.getElementById('desc').value = '';
             document.getElementById('valor').value = '';
             document.getElementById('parcelas').value = '1';
-            carregarDespesas();
+            
+            carregarDespesas(); // Atualiza a tela
         });
 
         document.getElementById('filter-btn').addEventListener('click', carregarDespesas);
 
-        // Carregar Gastos e Gerar Gráfico
-        async function carregarDespesas() {
-            if(!auth.currentUser) return;
-            
-            let mesFiltro = document.getElementById('mes-filtro').value;
-            if(!mesFiltro) {
-                const hoje = new Date();
-                mesFiltro = `${hoje.getFullYear()}-${(hoje.getMonth()+1).toString().padStart(2, '0')}`;
-                document.getElementById('mes-filtro').value = mesFiltro;
+        // Botão para limpar os dados de teste
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            if(confirm('Tem certeza que deseja apagar todos os gastos cadastrados?')) {
+                despesas = [];
+                salvarDados();
+                carregarDespesas();
             }
+        });
 
-            const q = query(collection(db, "despesas"), where("userId", "==", auth.currentUser.uid), where("mesAno", "==", mesFiltro));
-            const querySnapshot = await getDocs(q);
+        // Carregar Gastos e Gerar Gráfico baseando-se no array local
+        function carregarDespesas() {
+            const mesFiltro = document.getElementById('mes-filtro').value;
+            
+            // Filtra o array pelo mês selecionado
+            const despesasFiltradas = despesas.filter(d => d.mesAno === mesFiltro);
             
             const lista = document.getElementById('lista-despesas');
             lista.innerHTML = '';
@@ -171,16 +140,15 @@
             const labelsGrafico = [];
             const dadosGrafico = [];
 
-            querySnapshot.forEach((doc) => {
-                const d = doc.data();
+            despesasFiltradas.forEach((d) => {
                 const li = document.createElement('li');
                 li.innerText = `${d.desc} - R$ ${d.valor.toFixed(2)}`;
                 lista.appendChild(li);
 
                 total += d.valor;
                 
-                // Prepara os dados para o gráfico
-                const index = labelsGrafico.indexOf(d.desc);
+                // Prepara os dados para o gráfico agrupando descrições iguais
+                const index = labelsGrafico.findIndex(label => label === d.desc);
                 if(index === -1) {
                     labelsGrafico.push(d.desc);
                     dadosGrafico.push(d.valor);
@@ -200,7 +168,10 @@
         function atualizarGrafico(labels, data) {
             const ctx = document.getElementById('graficoPizza').getContext('2d');
             
-            if(meuGrafico) meuGrafico.destroy(); // Destrói o gráfico anterior para não sobrepor
+            if(meuGrafico) meuGrafico.destroy(); // Destrói o gráfico anterior
+
+            // Se não houver dados, não renderiza um gráfico vazio
+            if(data.length === 0) return;
 
             meuGrafico = new Chart(ctx, {
                 type: 'pie',
