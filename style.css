@@ -24,7 +24,11 @@ body {
     background-color: var(--bg-app);
     color: var(--text-dark);
     padding-bottom: 4rem;
-    overflow-x: hidden; /* Evita rolagem lateral indesejada no telemóvel */
+    width: 100%;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centraliza tudo o que está dentro do body */
 }
 
 .header-app {
@@ -34,6 +38,12 @@ body {
     text-align: center;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
+    width: 100%;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .header-content h1 {
@@ -49,8 +59,9 @@ body {
     font-weight: 400;
 }
 
-/* Garante margens seguras e centralização perfeita em qualquer ecrã */
+/* Contentor centralizado com margens simétricas */
 .container {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
@@ -61,6 +72,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.2rem;
     margin-bottom: 2rem;
+    width: 100%;
 }
 
 .kpi-card {
@@ -129,6 +141,7 @@ body {
     display: grid;
     grid-template-columns: 380px 1fr;
     gap: 1.5rem;
+    width: 100%;
 }
 
 @media (max-width: 950px) {
@@ -143,6 +156,7 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     margin-bottom: 1.5rem;
+    width: 100%;
 }
 
 h2 {
@@ -187,7 +201,6 @@ input[type="month"], select {
     cursor: pointer;
 }
 
-/* Ajuste específico para o seletor de cor não estourar no telemóvel */
 input[type="color"] {
     width: 100%;
     height: 48px;
