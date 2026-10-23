@@ -19,16 +19,24 @@
     </header>
 
     <div class="container">
+        <!-- Cards de Resumo no Topo (Agora com 4 cartões incluindo o Saldo) -->
         <div class="cards-row">
-            <div class="kpi-card">
-                <h3>Total a Pagar no Mês</h3>
+            <div class="kpi-card" style="border-left-color: #2563eb;">
+                <h3>Total de Gastos no Mês</h3>
                 <p id="kpi-total">R$ 0,00</p>
             </div>
-            <div class="kpi-card">
-                <h3>Lançamentos do Mês</h3>
-                <p id="kpi-qtd">0</p>
+            <div class="kpi-card" style="border-left-color: #10b981;">
+                <h3>Renda do Mês</h3>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                    <span style="font-size: 1.5rem; font-weight: 700;">R$</span>
+                    <input type="text" id="input-renda" value="0,00" style="font-size: 1.5rem; font-weight: 700; padding: 2px 8px; height: 40px;" placeholder="0,00">
+                </div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" style="border-left-color: #8b5cf6;" id="card-saldo-container">
+                <h3>Saldo Restante</h3>
+                <p id="kpi-saldo">R$ 0,00</p>
+            </div>
+            <div class="kpi-card" style="border-left-color: #f59e0b;">
                 <h3>Maior Parcela/Gasto</h3>
                 <p id="kpi-maior">R$ 0,00</p>
             </div>
@@ -70,7 +78,6 @@
                             <label>Mês Final (Automático)</label>
                             <input type="month" id="data-final" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
                         </div>
-                        <!-- Seletor de Cor do Gasto -->
                         <div class="form-group">
                             <label>Cor no Gráfico</label>
                             <input type="color" id="cor-gasto" value="#2563eb" style="height: 42px; padding: 4px; cursor: pointer;">
@@ -110,6 +117,8 @@
     <script>
         let meuGrafico = null;
         let despesas = JSON.parse(localStorage.getItem('gm_despesas')) || [];
+        // Rendas guardadas por mês (ex: {"2026-10": 5000})
+        let rendasMensais = JSON.parse(localStorage.getItem('gm_rendas')) || {};
 
         function formatarMoeda(valor) {
             return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -125,6 +134,7 @@
         const inputTotal = document.getElementById('valor');
         const inputParcela = document.getElementById('valor-parcela');
         const inputQtd = document.getElementById('parcelas');
+        const inputRenda = document.getElementById('input-renda');
 
         inputTotal.addEventListener('blur', () => {
             const total = converterParaNumero(inputTotal.value);
@@ -151,6 +161,17 @@
                 inputParcela.value = formatarMoeda(total / qtd);
             }
             atualizarMesFinal();
+        });
+
+        // Quando o utilizador altera a renda do mês selecionado
+        inputRenda.addEventListener('blur', () => {
+            const mesFiltro = document.getElementById('mes-filtro').value;
+            const valorRenda = converterParaNumero(inputRenda.value);
+            inputRenda.value = formatarMoeda(valorRenda);
+            
+            rendasMensais[mesFiltro] = valorRenda;
+            localStorage.setItem('gm_rendas', JSON.stringify(rendasMensais));
+            carregarDespesas();
         });
 
         function atualizarMesFinal() {
@@ -201,7 +222,7 @@
             const parcelas = parseInt(document.getElementById('parcelas').value);
             const dataInicio = document.getElementById('data-inicio').value;
             const valorParcela = converterParaNumero(inputParcela.value);
-            const corGasto = document.getElementById('cor-gasto').value; // Captura a cor escolhida
+            const corGasto = document.getElementById('cor-gasto').value;
 
             if(!desc || valorParcela <= 0 || !dataInicio || parcelas < 1) {
                 return alert('Preencha os campos de descrição, valor e data corretamente!');
@@ -232,7 +253,7 @@
                     valor: valorParcela,
                     mesAno: mesAno,
                     nomeOriginal: desc,
-                    cor: corGasto // Salva a cor escolhida no objeto
+                    cor: corGasto
                 });
             }
             
@@ -255,6 +276,11 @@
 
         function carregarDespesas() {
             const mesFiltro = document.getElementById('mes-filtro').value;
+            
+            // Carrega a renda salva para este mês específico
+            const rendaAtual = rendasMensais[mesFiltro] || 0;
+            inputRenda.value = formatarMoeda(rendaAtual);
+
             const despesasFiltradas = despesas.filter(d => d.mesAno === mesFiltro);
             
             const lista = document.getElementById('lista-despesas');
@@ -264,14 +290,13 @@
             let maiorGasto = 0;
             const labelsGrafico = [];
             const dadosGrafico = [];
-            const coresGrafico = []; // Array para guardar as cores personalizadas do gráfico
+            const coresGrafico = [];
 
             despesasFiltradas.forEach((d) => {
                 const li = document.createElement('li');
                 
                 li.innerHTML = `
                     <div class="item-info" style="display: flex; align-items: center; gap: 10px;">
-                        <!-- Bolinha indicadora da cor escolhida -->
                         <span style="width: 12px; height: 12px; background-color: ${d.cor || '#2563eb'}; border-radius: 50%; display: inline-block;"></span>
                         <span class="item-desc">${d.desc}</span>
                     </div>
@@ -296,11 +321,26 @@
                 if(index === -1) {
                     labelsGrafico.push(d.nomeOriginal);
                     dadosGrafico.push(d.valor);
-                    coresGrafico.push(d.cor || '#2563eb'); // Adiciona a cor escolhida
+                    coresGrafico.push(d.cor || '#2563eb');
                 } else {
                     dadosGrafico[index] += d.valor;
                 }
             });
+
+            // Cálculo do Saldo (Renda - Total de Gastos)
+            const saldoRestante = rendaAtual - total;
+            const elSaldo = document.getElementById('kpi-saldo');
+            elSaldo.innerText = `R$ ${formatarMoeda(saldoRestante)}`;
+            
+            // Altera a cor do card de saldo dependendo se está positivo ou negativo
+            const cardSaldo = document.getElementById('card-saldo-container');
+            if (saldoRestante < 0) {
+                cardSaldo.style.borderLeftColor = '#ef4444'; // Vermelho se negativo
+                elSaldo.style.color = '#ef4444';
+            } else {
+                cardSaldo.style.borderLeftColor = '#10b981'; // Verde se positivo
+                elSaldo.style.color = '#0f172a';
+            }
 
             document.getElementById('kpi-total').innerText = `R$ ${formatarMoeda(total)}`;
             document.getElementById('kpi-qtd').innerText = despesasFiltradas.length;
@@ -325,7 +365,7 @@
                     labels: labels,
                     datasets: [{
                         data: data,
-                        backgroundColor: cores, // Aplica as cores exatas escolhidas pelo utilizador
+                        backgroundColor: cores,
                         borderWidth: 0
                     }]
                 },
