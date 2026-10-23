@@ -335,9 +335,3 @@ li:last-child { border-bottom: none; }
     color: var(--danger);
     background-color: #fee2e2;
 }
-/* Garante que a área do gráfico tem altura visível */
-.chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
-}
