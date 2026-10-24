@@ -46,38 +46,40 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Sistema de Senha Mestra
-        const SENHA_MESTRA = "1234"; // Altere aqui para a senha desejada
+       // Sistema de Senha Mestra (Pede a senha sempre que atualizar ou reabrir a aba)
+    const SENHA_MESTRA = "1234"; // Altere aqui para a senha desejada
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('gm_autenticado') === 'true') {
-                document.getElementById('login-modal').style.display = 'none';
-            }
-
-            const btnEntrar = document.getElementById('btn-entrar');
-            const inputSenha = document.getElementById('senha-input');
-
-            if(btnEntrar) {
-                btnEntrar.addEventListener('click', validarSenha);
-            }
-            if(inputSenha) {
-                inputSenha.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') validarSenha();
-                });
-            }
-        });
-
-        function validarSenha() {
-            const digitada = document.getElementById('senha-input').value;
-            if (digitada === SENHA_MESTRA) {
-                localStorage.setItem('gm_autenticado', 'true');
-                document.getElementById('login-modal').style.display = 'none';
-            } else {
-                const erro = document.getElementById('erro-senha');
-                erro.style.display = 'block';
-                document.getElementById('senha-input').value = '';
-            }
+    window.addEventListener('DOMContentLoaded', () => {
+        // Se já digitou a senha nesta sessão, oculta o modal
+        if (sessionStorage.getItem('gm_autenticado') === 'true') {
+            document.getElementById('login-modal').style.display = 'none';
         }
+
+        const btnEntrar = document.getElementById('btn-entrar');
+        const inputSenha = document.getElementById('senha-input');
+
+        if(btnEntrar) {
+            btnEntrar.addEventListener('click', validarSenha);
+        }
+        if(inputSenha) {
+            inputSenha.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') validarSenha();
+            });
+        }
+    });
+
+    function validarSenha() {
+        const digitada = document.getElementById('senha-input').value;
+        if (digitada === SENHA_MESTRA) {
+            // Usa sessionStorage para expirar ao atualizar ou fechar a página
+            sessionStorage.setItem('gm_autenticado', 'true');
+            document.getElementById('login-modal').style.display = 'none';
+        } else {
+            const erro = document.getElementById('erro-senha');
+            erro.style.display = 'block';
+            document.getElementById('senha-input').value = '';
+        }
+    }
 
         // Restante das suas funções (carregarDadosNuvem, carregarDespesas, etc)...
     </script>
