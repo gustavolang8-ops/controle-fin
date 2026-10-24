@@ -18,7 +18,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+   <!-- Tela de Login / Senha Mestra -->
+    <div id="login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 1rem;">
+        <div style="background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
+            <h2 style="font-family: 'Pacifico', cursive; font-size: 2rem; color: #1e293b; margin-bottom: 0.5rem; border: none; padding: 0;">G&M Planilha</h2>
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Digite a senha de acesso do casal</p>
+            <input type="password" id="senha-input" placeholder="Digite a senha..." style="width: 100%; padding: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; outline: none;">
+            <button id="btn-entrar" style="width: 100%; padding: 0.9rem; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Entrar</button>
+            <p id="erro-senha" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.8rem; display: none;">Senha incorreta. Tente novamente!</p>
+        </div>
+    </div>
     <header class="header-app">
         <div class="header-content">
             <h1>G&M Planilha</h1>
