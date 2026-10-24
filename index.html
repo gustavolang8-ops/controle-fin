@@ -16,64 +16,67 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- Animações da tela de senha (pode ficar aqui ou no style.css) -->
+    <style>
+        @keyframes login-entrar {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card {
+            animation: login-entrar 0.5s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 30px 40px -10px rgba(0, 0, 0, 0.45) !important;
+        }
+
+        .login-input {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .login-input:hover {
+            border-color: #3b82f6 !important;
+            transform: scale(1.02);
+        }
+
+        .login-input:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .login-btn {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .login-btn:hover {
+            background: #2563eb !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+    </style>
 </head>
 <body>
 
     <!-- Tela de Login / Senha Mestra -->
     <div id="login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 1rem;">
-        <div style="background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
+        <div class="login-card" style="background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
             <h2 style="font-family: 'Pacifico', cursive; font-size: 2rem; color: #1e293b; margin-bottom: 0.5rem; border: none; padding: 0;">G&M Planilha</h2>
             <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Digite a senha de acesso do casal</p>
-            <input type="password" id="senha-input" placeholder="Digite a senha..." style="width: 100%; padding: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; outline: none;">
-            <button id="btn-entrar" style="width: 100%; padding: 0.9rem; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Entrar</button>
+            <input class="login-input" type="password" id="senha-input" placeholder="Digite a senha..." style="width: 100%; padding: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; outline: none;">
+            <button class="login-btn" id="btn-entrar" style="width: 100%; padding: 0.9rem; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Entrar</button>
             <p id="erro-senha" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.8rem; display: none;">Senha incorreta. Tente novamente!</p>
         </div>
     </div>
 
-   <script>
-
-       // Sistema de Senha Mestra (Pede a senha sempre que atualizar ou reabrir a aba)
-    const SENHA_MESTRA = "1234"; // Altere aqui para a senha desejada
-
-    window.addEventListener('DOMContentLoaded', () => {
-        // Se já digitou a senha nesta sessão, oculta o modal
-        if (sessionStorage.getItem('gm_autenticado') === 'true') {
-            document.getElementById('login-modal').style.display = 'none';
-        }
-
-        const btnEntrar = document.getElementById('btn-entrar');
-        const inputSenha = document.getElementById('senha-input');
-
-        if(btnEntrar) {
-            btnEntrar.addEventListener('click', validarSenha);
-        }
-        if(inputSenha) {
-            inputSenha.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') validarSenha();
-            });
-        }
-    });
-
-    function validarSenha() {
-        const digitada = document.getElementById('senha-input').value;
-        if (digitada === SENHA_MESTRA) {
-            // Usa sessionStorage para expirar ao atualizar ou fechar a página
-            sessionStorage.setItem('gm_autenticado', 'true');
-            document.getElementById('login-modal').style.display = 'none';
-        } else {
-            const erro = document.getElementById('erro-senha');
-            erro.style.display = 'block';
-            document.getElementById('senha-input').value = '';
-        }
-    }
-
-        // Restante das suas funções (carregarDadosNuvem, carregarDespesas, etc)...
-    </script>
-    </script>
-
     <header class="header-app">
-        <!-- O resto do seu código continua aqui... -->
-    </div>
         <div class="header-content">
             <h1>G&M Planilha</h1>
             <p>Controle financeiro inteligente</p>
@@ -187,7 +190,7 @@
             </div>
 
             <div class="data-col">
-                <!-- Gráfico de Rosca (Distribuição do Mês) com o Canvas restaurado -->
+                <!-- Gráfico de Rosca (Distribuição do Mês) -->
                 <div class="box">
                     <h2>Distribuição dos Gastos (Mês Atual)</h2>
                     <div class="chart-container">
@@ -195,7 +198,7 @@
                     </div>
                 </div>
 
-                <!-- Gráfico de Barras (Evolução Anual) com o Canvas restaurado -->
+                <!-- Gráfico de Barras (Evolução Anual) -->
                 <div class="box">
                     <h2>Evolução dos Gastos por Ano</h2>
                     <div class="chart-container">
@@ -214,8 +217,45 @@
         </div>
     </div>
 
+    <!-- Sistema de Senha Mestra -->
     <script>
-        // Configuração do Firebase com suas chaves oficiais obtidas no painel
+        const SENHA_MESTRA = "1234"; // Altere aqui para a senha desejada
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Se já digitou a senha nesta sessão, oculta o modal
+            if (sessionStorage.getItem('gm_autenticado') === 'true') {
+                document.getElementById('login-modal').style.display = 'none';
+            }
+
+            const btnEntrar = document.getElementById('btn-entrar');
+            const inputSenha = document.getElementById('senha-input');
+
+            if (btnEntrar) {
+                btnEntrar.addEventListener('click', validarSenha);
+            }
+            if (inputSenha) {
+                inputSenha.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') validarSenha();
+                });
+            }
+        });
+
+        function validarSenha() {
+            const digitada = document.getElementById('senha-input').value;
+            if (digitada === SENHA_MESTRA) {
+                sessionStorage.setItem('gm_autenticado', 'true');
+                document.getElementById('login-modal').style.display = 'none';
+            } else {
+                const erro = document.getElementById('erro-senha');
+                erro.style.display = 'block';
+                document.getElementById('senha-input').value = '';
+            }
+        }
+    </script>
+
+    <!-- Aplicação principal -->
+    <script>
+        // Configuração do Firebase (declarada uma única vez)
         const firebaseConfig = {
             apiKey: "AIzaSyBE8Z0aYK0BflL8bvCbDYXlqytehayeiWI",
             authDomain: "gmplanilhas-185ff.firebaseapp.com",
