@@ -31,17 +31,29 @@
         </div>
     </div>
 
-    <!-- Script de Login logo abaixo do modal -->
-    <script>
+   <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBE8Z0aYK0BflL8bvCbDYXlqytehayeiWI",
+            authDomain: "gmplanilhas-185ff.firebaseapp.com",
+            projectId: "gmplanilhas-185ff",
+            storageBucket: "gmplanilhas-185ff.firebasestorage.app",
+            messagingSenderId: "578341373829",
+            appId: "1:578341373829:web:ff2fc4d136e6f5934ee6ec",
+            measurementId: "G-91K1CYVV00"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Sistema de Senha Mestra
         const SENHA_MESTRA = "1234"; // Altere aqui para a senha desejada
 
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('gm_autenticado') === 'true') {
                 document.getElementById('login-modal').style.display = 'none';
             }
-        });
 
-        document.addEventListener('DOMContentLoaded', () => {
             const btnEntrar = document.getElementById('btn-entrar');
             const inputSenha = document.getElementById('senha-input');
 
@@ -66,6 +78,9 @@
                 document.getElementById('senha-input').value = '';
             }
         }
+
+        // Restante das suas funções (carregarDadosNuvem, carregarDespesas, etc)...
+    </script>
     </script>
 
     <header class="header-app">
