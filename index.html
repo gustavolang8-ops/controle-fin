@@ -18,7 +18,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-   <!-- Tela de Login / Senha Mestra -->
+  <body>
+
+    <!-- Tela de Login / Senha Mestra -->
     <div id="login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 1rem;">
         <div style="background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
             <h2 style="font-family: 'Pacifico', cursive; font-size: 2rem; color: #1e293b; margin-bottom: 0.5rem; border: none; padding: 0;">G&M Planilha</h2>
@@ -27,6 +29,47 @@
             <button id="btn-entrar" style="width: 100%; padding: 0.9rem; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Entrar</button>
             <p id="erro-senha" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.8rem; display: none;">Senha incorreta. Tente novamente!</p>
         </div>
+    </div>
+
+    <!-- Script de Login logo abaixo do modal -->
+    <script>
+        const SENHA_MESTRA = "1234"; // Altere aqui para a senha desejada
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('gm_autenticado') === 'true') {
+                document.getElementById('login-modal').style.display = 'none';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnEntrar = document.getElementById('btn-entrar');
+            const inputSenha = document.getElementById('senha-input');
+
+            if(btnEntrar) {
+                btnEntrar.addEventListener('click', validarSenha);
+            }
+            if(inputSenha) {
+                inputSenha.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') validarSenha();
+                });
+            }
+        });
+
+        function validarSenha() {
+            const digitada = document.getElementById('senha-input').value;
+            if (digitada === SENHA_MESTRA) {
+                localStorage.setItem('gm_autenticado', 'true');
+                document.getElementById('login-modal').style.display = 'none';
+            } else {
+                const erro = document.getElementById('erro-senha');
+                erro.style.display = 'block';
+                document.getElementById('senha-input').value = '';
+            }
+        }
+    </script>
+
+    <header class="header-app">
+        <!-- O resto do seu código continua aqui... -->
     </div>
     <header class="header-app">
         <div class="header-content">
