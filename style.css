@@ -21,7 +21,7 @@
 }
 
 body {
-    background-color: var(--bg-app); /* Fundo claro restaurado */
+    background-color: var(--bg-app); /* Garante o fundo cinza claro original */
     color: var(--text-dark);
     padding-bottom: 4rem;
     width: 100%;
